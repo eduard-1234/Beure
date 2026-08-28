@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#171009">
+<title>Contador de Cerveses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#171009;
+  --card:#241812;
+  --card2:#2e2016;
+  --line:#3d2c1e;
+  --amber:#f5a83c;
+  --amber-dark:#c77f1d;
+  --foam:#f8efdf;
+  --muted:#b4a18c;
+  --danger:#d9614c;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--foam);font-family:-apple-system,system-ui,sans-serif;min-height:100%}
+body{max-width:480px;margin:0 auto;padding:0 16px 40px}
+h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif}
+.topbar{display:flex;align-items:center;gap:10px;padding:18px 0 8px;position:sticky;top:0;background:var(--bg);z-index:5}
+.back{background:var(--card);border:1px solid var(--line);color:var(--foam);border-radius:12px;padding:8px 14px;font-size:15px;cursor:pointer}
+.topbar h2{font-size:20px;font-weight:700;flex:1}
+.home-hero{text-align:center;padding:44px 0 26px}
+.home-hero .glass{font-size:56px;display:block;margin-bottom:6px}
+.home-hero h1{font-size:32px;font-weight:800;letter-spacing:-.5px}
+.menu{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.menu button{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;color:var(--foam);font-size:17px;font-weight:600;cursor:pointer;text-align:left;font-family:'Bricolage Grotesque',sans-serif}
+.menu button .ic{font-size:22px}
+.menu button:active{background:var(--card2)}
+.credit{text-align:center;color:var(--muted);font-size:12px;margin-top:38px;letter-spacing:.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{font-size:15px;color:var(--amber);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.statrow{display:flex;gap:12px}
+.stat{flex:1;background:var(--card2);border-radius:12px;padding:14px;text-align:center}
+.stat .n{font-family:'Bricolage Grotesque';font-size:30px;font-weight:800;color:var(--amber)}
+.stat .l{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--amber);color:#231503;border-color:var(--amber)}
+input[type=date],input[type=month],input[type=text],select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--foam);font-size:16px;margin-bottom:12px;font-family:inherit;color-scheme:dark}
+.kv{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.kv:last-child{border-bottom:none}
+.kv .v{font-weight:700;color:var(--amber)}
+.big-code{font-family:'Bricolage Grotesque';font-size:34px;font-weight:800;letter-spacing:4px;color:var(--amber);text-align:center;padding:18px 0;user-select:all}
+.btn{width:100%;padding:15px;border-radius:14px;border:none;background:var(--amber);color:#231503;font-size:17px;font-weight:700;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif}
+.btn:active{background:var(--amber-dark)}
+.btn.ghost{background:var(--card);color:var(--foam);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
+.room-item{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer}
+.room-item .name{font-family:'Bricolage Grotesque';font-size:17px;font-weight:700}
+.room-item .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.chev{color:var(--muted);font-size:20px}
+.cat{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.cat-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;background:var(--card2);cursor:pointer;font-weight:700;font-size:16px;font-family:'Bricolage Grotesque'}
+.cat-head .pts{font-size:13px;color:var(--muted);font-weight:400;font-family:-apple-system,system-ui}
+.cat-body{padding:4px 15px 10px;display:none}
+.cat.open .cat-body{display:block}
+.drink-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.drink-row:last-child{border-bottom:none}
+.drink-row .dl{font-size:15px}
+.drink-row .dl small{display:block;color:var(--muted);font-size:12px}
+.stepper{display:flex;align-items:center;gap:2px}
+.stepper button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--amber);font-size:22px;font-weight:700;cursor:pointer}
+.stepper button:active{background:var(--card2)}
+.stepper .cnt{width:38px;text-align:center;font-family:'Bricolage Grotesque';font-size:19px;font-weight:800}
+.member{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line)}
+.member:last-child{border-bottom:none}
+.member .mn{font-size:16px;font-weight:600}
+.member .streak{font-size:14px;background:var(--card2);border-radius:20px;padding:4px 10px;color:var(--amber);font-weight:700}
+.member .today{font-size:13px;color:var(--muted)}
+.podium{display:flex;flex-direction:column;gap:8px}
+.pod{display:flex;align-items:center;gap:12px;background:var(--card2);border-radius:12px;padding:12px}
+.pod .medal{font-size:24px}
+.pod .who{flex:1}
+.pod .who b{display:block;font-size:16px}
+.pod .who span{font-size:12px;color:var(--muted)}
+.pod .p{font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:var(--amber)}
+.bars{display:flex;align-items:flex-end;gap:2px;height:110px;margin-top:8px}
+.bar{flex:1;background:var(--amber);border-radius:3px 3px 0 0;min-height:2px;position:relative;cursor:pointer}
+.bar.zero{background:var(--line)}
+.tipn{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--amber);color:#231503;font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;margin-bottom:3px;font-family:'Bricolage Grotesque';white-space:nowrap;z-index:2}
+.bars-labels{display:flex;gap:2px;margin-top:4px}
+.bars-labels span{flex:1;text-align:center;font-size:8px;color:var(--muted)}
+.subh{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:16px 0 4px}
+.note{font-size:13px;color:var(--muted);line-height:1.45;margin-top:8px}
+.err{font-size:13px;color:var(--danger);line-height:1.45;margin:0 0 12px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px;line-height:1.5}
+.splash{position:fixed;inset:0;margin:0 auto;max-width:480px;background:var(--bg);display:flex;flex-direction:column;justify-content:space-between;padding:80px 24px 24px;overflow:hidden;z-index:10}
+.splash .bgdeco span{position:absolute;font-size:38px;opacity:.16;pointer-events:none}
+.splash h1{font-size:38px;font-weight:800;text-align:center;line-height:1.15;position:relative;letter-spacing:-.5px}
+.splash .sbottom{position:relative;width:100%}
+.splash .credit{margin-top:14px}
+.two{display:flex;gap:10px}
+.two > *{flex:1}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeFirestore, persistentLocalCache, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyABgzFvrg2QXVCa-W1Ga8ZQrD0RydgTIKE",
+  authDomain: "beure-8edf7.firebaseapp.com",
+  projectId: "beure-8edf7",
+  storageBucket: "beure-8edf7.firebasestorage.app",
+  messagingSenderId: "233436530363",
+  appId: "1:233436530363:web:b8df228eb09f5cba524b9e"
+};
+const fbApp = initializeApp(firebaseConfig);
+let db;
+try{ db = initializeFirestore(fbApp,{localCache:persistentLocalCache()}); }
+catch(e){ db = initializeFirestore(fbApp,{}); }
+
+/* ================= CONSTANTS ================= */
+const KEY='cerveses_fb_v1';
+const DRINKS=[
+ {id:'xdur',  cat:'xupito',  label:'Alcohol dur',      sub:'whisky, vodka…', pts:1},
+ {id:'xbroma',cat:'xupito',  label:'Alcohol de broma', sub:'limoncello…',    pts:0.5},
+ {id:'cubata',cat:'cubata',  label:'Cubata',           sub:'',               pts:1},
+ {id:'canya', cat:'cervesa', label:'Canya',            sub:'',               pts:1},
+ {id:'quinto',cat:'cervesa', label:'Quinto',           sub:'',               pts:0.5},
+ {id:'clara', cat:'cervesa', label:'Clara',            sub:'',               pts:0.5},
+];
+const CATS=[{id:'xupito',label:'Xupito',ic:'🥃'},{id:'cubata',label:'Cubata',ic:'🍹'},{id:'cervesa',label:'Cervesa',ic:'🍺'}];
+const MESOS=['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+
+/* ================= ESTAT LOCAL ================= */
+/* Al mòbil només hi guardem a quines sales som i qui hi som. Les dades viuen a Firestore. */
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s;}catch(e){}return {myRooms:[]};}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+/* Sala oberta en directe */
+let live={code:null,unsub:null,members:null};
+/* Dades agregades del perfil */
+let prof={loading:false,entries:null};
+
+/* ================= DATES I PUNTS ================= */
+/* El dia acaba a les 8 del matí */
+function effDate(d){const x=new Date((d||new Date()).getTime()-8*3600*1000);return x;}
+function keyOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayKey(){return keyOf(effDate());}
+function addDays(k,n){const [y,m,d]=k.split('-').map(Number);const dt=new Date(y,m-1,d+n);return keyOf(dt);}
+function fmtKey(k){const [y,m,d]=k.split('-');return d+'/'+m+'/'+y;}
+
+function entryPts(e){let r={xupito:0,cubata:0,cervesa:0,total:0};if(!e)return r;
+ for(const dr of DRINKS){const n=e[dr.id]||0;r[dr.cat]+=n*dr.pts;}
+ r.total=r.xupito+r.cubata+r.cervesa;return r;}
+function drinkDays(entries){return Object.keys(entries||{}).filter(k=>entryPts(entries[k]).total>0).sort();}
+function maxStreak(days){if(!days.length)return 0;let best=1,cur=1;
+ for(let i=1;i<days.length;i++){cur=(addDays(days[i-1],1)===days[i])?cur+1:1;best=Math.max(best,cur);}return best;}
+function maxSober(days){if(days.length===0)return 0;let best=0;
+ for(let i=1;i<days.length;i++){let a=days[i-1],b=days[i],gap=0,k=addDays(a,1);while(k<b){gap++;k=addDays(k,1);}best=Math.max(best,gap);}
+ let gap=0,k=addDays(days[days.length-1],1),t=todayKey();while(k<=t){gap++;k=addDays(k,1);}best=Math.max(best,gap);
+ return best;}
+function curStreak(entries){const days=new Set(drinkDays(entries));let t=todayKey();
+ if(!days.has(t)){if(!days.has(addDays(t,-1)))return 0;t=addDays(t,-1);}
+ let n=0;while(days.has(t)){n++;t=addDays(t,-1);}return n;}
+function newCode(){let c='';for(let i=0;i<9;i++)c+=Math.floor(Math.random()*10);return c;}
+function nameTaken(members,name){return members.some(m=>(m.name||'').trim().toLowerCase()===name.trim().toLowerCase());}
+
+/* ================= FIRESTORE ================= */
+function roomRef(code){return doc(db,'rooms',code);}
+function membersCol(code){return collection(db,'rooms',code,'members');}
+function myEntry(code){const r=S.myRooms.find(x=>x.code===code);return r;}
+
+function openLive(code){
+ if(live.code===code&&live.unsub)return;
+ if(live.unsub)live.unsub();
+ live={code,unsub:null,members:null};
+ live.unsub=onSnapshot(membersCol(code),snap=>{
+  live.members=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(view.s==='sala'&&view.code===code)render();
+ },err=>{console.error(err);});
+}
+
+async function loadProfile(){
+ if(prof.loading)return;prof.loading=true;
+ const out={};
+ for(const r of S.myRooms){
+  try{const d=await getDoc(doc(db,'rooms',r.code,'members',r.memberId));
+   if(d.exists()){const e=d.data().entries||{};
+    for(const k in e){out[k]=out[k]||{};for(const dr of DRINKS){out[k][dr.id]=(out[k][dr.id]||0)+(e[k][dr.id]||0);}}}}
+  catch(err){console.error(err);}
+ }
+ prof.entries=out;prof.loading=false;
+ if(view.s==='perfil')render();
+}
+
+/* ================= NAVEGACIÓ ================= */
+const app=document.getElementById('app');
+let view={s:'splash'};
+window.view=view;
+function go(s,p){view={s,...p};window.view=view;
+ if(s==='perfil'){prof={loading:false,entries:null};loadProfile();}
+ if(s==='sala'&&view.code)openLive(view.code);
+ render();window.scrollTo(0,0);}
+window.go=go;
+
+function render(){
+ const map={splash,home,perfil,crear,unir,sales,sala};
+ app.innerHTML=map[view.s]();
+}
+window.render=render;
+
+function bar(title,backTo){return `
+ <div class="topbar">
+  <button class="back" onclick="go('${backTo||'home'}')">←</button>
+  <h2>${title}</h2>
+ </div>`;}
+
+/* ================= PANTALLES ================= */
+function splash(){
+ const deco=['🍺','🍹','🥃','🍻','🍺','🍹','🥃','🍻','🍺','🍹','🍺','🥂','🍻','🥃'];
+ const pos=[[5,10,-15],[72,7,20],[40,16,8],[12,27,25],[82,24,-10],[55,33,-20],[25,44,12],[76,47,18],[8,57,-8],[48,60,-14],[68,70,10],[15,74,20],[85,80,-18],[38,84,15]];
+ const spans=deco.map((e,i)=>`<span style="left:${pos[i][0]}%;top:${pos[i][1]}%;transform:rotate(${pos[i][2]}deg)">${e}</span>`).join('');
+ return `<div class="splash">
+  <div class="bgdeco">${spans}</div>
+  <h1>A veure com<br>va el beure 🍻</h1>
+  <div class="sbottom">
+   <button class="btn" onclick="go('home')">Entrar</button>
+   <div class="credit">created by Eduard Agustí</div>
+  </div>
+ </div>`;}
+
+function home(){return `
+ <div class="home-hero">
+  <span class="glass">🍻</span>
+  <h1>Contador de Cerveses</h1>
+ </div>
+ <div class="menu">
+  <button onclick="go('perfil')"><span class="ic">👤</span> El meu perfil</button>
+  <button onclick="go('crear')"><span class="ic">➕</span> Crear sala</button>
+  <button onclick="go('unir')"><span class="ic">🔑</span> Unir-me a sala</button>
+  <button onclick="go('sales')"><span class="ic">🏠</span> Les meves sales</button>
+ </div>
+ <div class="credit">created by Eduard Agustí</div>`;}
+
+/* ---------- PERFIL ---------- */
+function perfil(){
+ if(prof.entries===null){return bar('El meu perfil')+`<div class="empty">Carregant les teves dades…</div>`;}
+ const entries=prof.entries;
+ const days=drinkDays(entries);
+ const tab=view.tab||'dia';
+ const selDate=view.date||todayKey();
+ const selMonth=view.month||todayKey().slice(0,7);
+ const selYear=view.year||todayKey().slice(0,4);
+ let body='';
+ if(tab==='dia'){
+  const e=entries[selDate];const p=entryPts(e);
+  body=`<input type="date" value="${selDate}" onchange="view.date=this.value;render()">`;
+  if(!e||p.total===0){body+=`<div class="empty">Cap beguda apuntada aquest dia.</div>`;}
+  else{body+=DRINKS.filter(d=>e[d.id]).map(d=>`<div class="kv"><span>${d.label}</span><span class="v">×${e[d.id]}</span></div>`).join('');
+   body+=`<div class="kv"><span><b>Total punts</b></span><span class="v">${p.total}</span></div>`;}
+ }else if(tab==='mes'){
+  let t={xupito:0,cubata:0,cervesa:0,total:0};
+  for(const k in entries){if(k.startsWith(selMonth)){const p=entryPts(entries[k]);for(const c in t)t[c]+=p[c];}}
+  body=`<input type="month" value="${selMonth}" onchange="view.month=this.value;render()">`
+   +CATS.map(c=>`<div class="kv"><span>${c.ic} ${c.label}</span><span class="v">${t[c.id]}</span></div>`).join('')
+   +`<div class="kv"><span><b>Total mes</b></span><span class="v">${t.total}</span></div>`;
+ }else{
+  const years=[...new Set(days.map(d=>d.slice(0,4)).concat([todayKey().slice(0,4)]))].sort();
+  let rows='',tot=0;
+  for(let m=1;m<=12;m++){const mk=selYear+'-'+String(m).padStart(2,'0');let s=0;
+   for(const k in entries){if(k.startsWith(mk))s+=entryPts(entries[k]).total;}
+   tot+=s;if(s>0)rows+=`<div class="kv"><span>${MESOS[m-1]}</span><span class="v">${s}</span></div>`;}
+  body=`<select onchange="view.year=this.value;render()">${years.map(y=>`<option ${y===selYear?'selected':''}>${y}</option>`).join('')}</select>`
+   +(rows||`<div class="empty">Res apuntat aquest any.</div>`)
+   +(rows?`<div class="kv"><span><b>Total any</b></span><span class="v">${tot}</span></div>`:'');
+ }
+ return bar('El meu perfil')+`
+ <div class="card"><div class="statrow">
+  <div class="stat"><div class="n">${maxStreak(days)}</div><div class="l">ratxa més llarga bevent (dies)</div></div>
+  <div class="stat"><div class="n">${maxSober(days)}</div><div class="l">ratxa més llarga sense beure (dies)</div></div>
+ </div></div>
+ <div class="card">
+  <h3>Consulta</h3>
+  <div class="tabs">
+   <button class="${tab==='dia'?'on':''}" onclick="view.tab='dia';render()">Dia</button>
+   <button class="${tab==='mes'?'on':''}" onclick="view.tab='mes';render()">Mes</button>
+   <button class="${tab==='any'?'on':''}" onclick="view.tab='any';render()">Any</button>
+  </div>
+  ${body}
+  <div class="note">Suma de tot el que has apuntat a totes les teves sales. El dia acaba a les 8 del matí: el que apuntis de matinada compta per la nit anterior.</div>
+ </div>`;}
+
+/* ---------- CREAR SALA ---------- */
+function crear(){
+ if(view.created){const r=S.myRooms.find(x=>x.code===view.created);
+  return bar('Sala creada')+`
+  <div class="card" style="text-align:center">
+   <h3>${r.roomName}</h3>
+   <p class="note">Passa aquest codi als teus amics perquè s'hi uneixin:</p>
+   <div class="big-code">${r.code}</div>
+   <button class="btn" onclick="go('sala',{code:'${r.code}'})">Entrar a la sala</button>
+  </div>`;}
+ return bar('Crear sala')+`
+ <div class="card">
+  <h3>Nova sala</h3>
+  <input type="text" id="rname" placeholder="Nom de la sala" maxlength="30">
+  <input type="text" id="cname" placeholder="El teu nom en aquesta sala" maxlength="20">
+  ${view.err?`<div class="err">${view.err}</div>`:''}
+  <button class="btn" id="crearBtn" onclick="doCrear()">Crear i generar codi</button>
+  <div class="note">Es generarà un codi aleatori de 9 xifres. Només podrà entrar-hi qui tingui el codi.</div>
+ </div>`;}
+
+async function doCrear(){
+ const v=document.getElementById('rname').value.trim();
+ const n=document.getElementById('cname').value.trim();
+ view.err=null;
+ if(!v||!n){view.err='Omple el nom de la sala i el teu nom.';render();return;}
+ const b=document.getElementById('crearBtn');b.disabled=true;b.textContent='Creant…';
+ try{
+  let code=newCode();
+  const exists=await getDoc(roomRef(code));
+  if(exists.exists())code=newCode();
+  await setDoc(roomRef(code),{name:v,createdAt:serverTimestamp()});
+  const m=await addDoc(membersCol(code),{name:n,entries:{},joinedAt:serverTimestamp()});
+  S.myRooms.push({code,memberId:m.id,myName:n,roomName:v});save();
+  view.created=code;render();
+ }catch(e){console.error(e);view.err='No s\'ha pogut crear la sala. Revisa la connexió i torna-ho a provar.';render();}
+}
+window.doCrear=doCrear;
+
+/* ---------- UNIR-ME ---------- */
+function unir(){return bar('Unir-me a sala')+`
+ <div class="card">
+  <h3>Introdueix el codi</h3>
+  <input type="text" id="jcode" placeholder="Codi de 9 xifres" inputmode="numeric" maxlength="9">
+  <input type="text" id="jname" placeholder="El teu nom en aquesta sala" maxlength="20">
+  ${view.err?`<div class="err">${view.err}</div>`:''}
+  <button class="btn" id="unirBtn" onclick="doUnir()">Unir-me</button>
+  <div class="note">Si el nom que tries ja el fa servir algú de la sala, et demanarà un altre.</div>
+ </div>`;}
+
+async function doUnir(){
+ const c=document.getElementById('jcode').value.trim();
+ const n=document.getElementById('jname').value.trim();
+ view.err=null;
+ if(c.length!==9){view.err='El codi ha de tenir 9 xifres.';render();return;}
+ if(!n){view.err='Posa un nom.';render();return;}
+ if(S.myRooms.some(x=>x.code===c)){view.err='Ja ets dins d\'aquesta sala.';render();return;}
+ const b=document.getElementById('unirBtn');b.disabled=true;b.textContent='Entrant…';
+ try{
+  const snap=await getDoc(roomRef(c));
+  if(!snap.exists()){view.err='No existeix cap sala amb aquest codi.';render();return;}
+  const mems=(await getDocs(membersCol(c))).docs.map(d=>d.data());
+  if(nameTaken(mems,n)){view.err='Aquest nom ja està en ús en aquesta sala. Tria\'n un altre.';render();return;}
+  const m=await addDoc(membersCol(c),{name:n,entries:{},joinedAt:serverTimestamp()});
+  S.myRooms.push({code:c,memberId:m.id,myName:n,roomName:snap.data().name});save();
+  go('sala',{code:c});
+ }catch(e){console.error(e);view.err='No s\'ha pogut connectar. Revisa la connexió i torna-ho a provar.';render();}
+}
+window.doUnir=doUnir;
+
+/* ---------- LES MEVES SALES ---------- */
+function sales(){
+ const items=S.myRooms.map(r=>`
+  <div class="room-item" onclick="go('sala',{code:'${r.code}'})">
+   <div><div class="name">${r.roomName}</div>
+   <div class="sub">ets ${r.myName} · codi ${r.code}</div></div>
+   <span class="chev">›</span></div>`).join('');
+ return bar('Les meves sales')+(items||`<div class="empty">Encara no ets a cap sala.<br>Crea'n una o uneix-te amb un codi.</div>`);}
+
+/* ---------- SALA ---------- */
+function sala(){
+ const my=myEntry(view.code);if(!my)return sales();
+ if(live.members===null){return bar(my.roomName,'sales')+`<div class="empty">Carregant la sala…</div>`;}
+ const members=live.members;
+ const me=members.find(m=>m.id===my.memberId)||{name:my.myName,entries:{}};
+ const tk=todayKey();
+ const myToday=(me.entries||{})[tk]||{};
+ const selTop=view.topMonth||tk.slice(0,7);
+ const selDMonth=view.dMonth||tk.slice(0,7);
+ const selDCat=view.dCat||'cervesa';
+ const selWho=(view.dWho!==undefined)?Number(view.dWho):members.findIndex(m=>m.id===my.memberId);
+ const whoM=members[selWho]||me;
+
+ const cats=CATS.map(c=>{
+  const rows=DRINKS.filter(d=>d.cat===c.id).map(d=>`
+   <div class="drink-row">
+    <div class="dl">${d.label}${d.sub?`<small>${d.sub}</small>`:''}<small>${d.pts} punt${d.pts===1?'':'s'} cada un</small></div>
+    <div class="stepper">
+     <button onclick="step('${d.id}',-1)">−</button>
+     <span class="cnt">${myToday[d.id]||0}</span>
+     <button onclick="step('${d.id}',1)">+</button>
+    </div>
+   </div>`).join('');
+  const p=entryPts(myToday)[c.id];
+  return `<div class="cat ${view['open_'+c.id]?'open':''}">
+   <div class="cat-head" onclick="view.open_${c.id}=!view.open_${c.id};render()">
+    <span>${c.ic} ${c.label}</span><span class="pts">${p} punts avui</span></div>
+   <div class="cat-body">${rows}</div></div>`;}).join('');
+
+ const avuiList=members.map(m=>{const e=(m.entries||{})[tk]||{};const p=entryPts(e).total;
+  const det=DRINKS.filter(d=>e[d.id]).map(d=>`${e[d.id]} ${d.label.toLowerCase()}`).join(' · ')||'res encara';
+  return `<div class="member"><div><div class="mn">${m.name}${m.id===my.memberId?' (tu)':''}</div><div class="today">${det}</div></div><div class="streak" style="background:none">${p} pts</div></div>`;}).join('');
+
+ const membres=[...members].sort((a,b)=>curStreak(b.entries)-curStreak(a.entries))
+  .map(m=>{const st=curStreak(m.entries);
+  return `<div class="member">
+   <div class="mn">${m.name}${m.id===my.memberId?' (tu)':''}</div>
+   <div class="streak">🍺 ${st} ${st===1?'dia':'dies'}</div></div>`;}).join('');
+
+ function topOf(cat){let best=null,bp=0;
+  for(const m of members){let s=0;const e=m.entries||{};
+   for(const k in e){if(k.startsWith(selTop))s+=entryPts(e[k])[cat];}
+   if(s>bp){bp=s;best=m.name;}}
+  return best?{name:best,p:bp}:null;}
+ const pods=CATS.map(c=>{const t=topOf(c.id);
+  return t?`<div class="pod"><span class="medal">${c.ic}</span>
+   <div class="who"><b>${t.name}</b><span>rei del ${c.label.toLowerCase()}</span></div>
+   <div class="p">${t.p}</div></div>`:'';}).join('')||`<div class="empty">Res apuntat aquest mes.</div>`;
+
+ const [dy,dm]=selDMonth.split('-').map(Number);
+ const ndays=new Date(dy,dm,0).getDate();
+ let maxV=0;const vals=[];
+ for(let d=1;d<=ndays;d++){const k=selDMonth+'-'+String(d).padStart(2,'0');
+  const v=entryPts((whoM.entries||{})[k])[selDCat];vals.push(v);maxV=Math.max(maxV,v);}
+ const barsH=vals.map((v,i)=>`<div class="bar ${v===0?'zero':''}" style="height:${maxV?Math.max(4,v/maxV*100):2}%" onclick="view.dSel=${i};render()">${view.dSel===i?`<span class="tipn">${v}</span>`:''}</div>`).join('');
+ const labs=vals.map((_,i)=>`<span>${(i+1)%5===0||i===0?i+1:''}</span>`).join('');
+ const selInfo=(view.dSel!==undefined&&view.dSel!==null)?`<div class="note">Dia ${view.dSel+1}: <b style="color:var(--amber)">${vals[view.dSel]} punts</b> de ${CATS.find(c=>c.id===selDCat).label.toLowerCase()}</div>`:'';
+
+ return bar(my.roomName,'sales')+`
+ <div class="note" style="margin-bottom:12px">Codi de la sala: <b style="color:var(--amber)">${my.code}</b> · Nit del ${fmtKey(tk)}</div>
+
+ <div class="card">
+  <h3>Quant he begut avui</h3>
+  ${cats}
+  <div class="subh">El grup avui</div>
+  ${avuiList}
+ </div>
+
+ <div class="card">
+  <h3>El grup</h3>
+  ${membres}
+  <div class="note">La ratxa compta dies seguits bevent. Un dia en blanc i torna a zero.</div>
+ </div>
+
+ <div class="card">
+  <h3>Borratxo del mes</h3>
+  <input type="month" value="${selTop}" onchange="view.topMonth=this.value;render()">
+  <div class="podium">${pods}</div>
+ </div>
+
+ <div class="card">
+  <h3>Distribució</h3>
+  <div class="two">
+   <input type="month" value="${selDMonth}" onchange="view.dMonth=this.value;view.dSel=null;render()">
+   <select onchange="view.dCat=this.value;view.dSel=null;render()">
+    ${CATS.map(c=>`<option value="${c.id}" ${c.id===selDCat?'selected':''}>${c.ic} ${c.label}</option>`).join('')}
+   </select>
+  </div>
+  <select onchange="view.dWho=this.value;view.dSel=null;render()">
+   ${members.map((m,i)=>`<option value="${i}" ${i===selWho?'selected':''}>👤 ${m.name}${m.id===my.memberId?' (tu)':''}</option>`).join('')}
+  </select>
+  <div class="bars">${barsH}</div>
+  <div class="bars-labels">${labs}</div>
+  ${selInfo}
+  <div class="note">Punts de ${CATS.find(c=>c.id===selDCat).label.toLowerCase()} ${whoM.id===my.memberId?'teus':'de '+whoM.name} per dia del mes. Toca una barra per veure el número.</div>
+ </div>`;}
+
+function step(drinkId,delta){
+ const my=myEntry(view.code);if(!my||live.members===null)return;
+ const me=live.members.find(m=>m.id===my.memberId);if(!me)return;
+ const tk=todayKey();
+ me.entries=me.entries||{};
+ me.entries[tk]=me.entries[tk]||{};
+ me.entries[tk][drinkId]=Math.max(0,(me.entries[tk][drinkId]||0)+delta);
+ if(entryPts(me.entries[tk]).total===0)delete me.entries[tk];
+ render(); /* pintat immediat */
+ updateDoc(doc(db,'rooms',my.code,'members',my.memberId),{entries:me.entries})
+  .catch(e=>console.error(e)); /* offline: la SDK ho encua i ho envia quan torni la connexió */
+}
+window.step=step;
+
+render();
+</script>
+</body>
+</html>
