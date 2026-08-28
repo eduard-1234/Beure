@@ -168,6 +168,19 @@ function curStreak(entries){const days=new Set(drinkDays(entries));let t=todayKe
  let n=0;while(days.has(t)){n++;t=addDays(t,-1);}return n;}
 function newCode(){let c='';for(let i=0;i<9;i++)c+=Math.floor(Math.random()*10);return c;}
 function nameTaken(members,name){return members.some(m=>(m.name||'').trim().toLowerCase()===name.trim().toLowerCase());}
+function pad2(n){return String(n).padStart(2,'0');}
+function yearsFrom(dayKeys){const s=new Set(dayKeys.map(k=>k.slice(0,4)));s.add(todayKey().slice(0,4));return [...s].sort();}
+function ymPicker(field,cur,years){const [y,m]=cur.split('-');
+ return `<div class="two">
+  <select onchange="setYM('${field}','m',this.value)">${MESOS.map((n,i)=>`<option value="${pad2(i+1)}" ${pad2(i+1)===m?'selected':''}>${n}</option>`).join('')}</select>
+  <select onchange="setYM('${field}','y',this.value)">${years.map(yy=>`<option ${yy===y?'selected':''}>${yy}</option>`).join('')}</select>
+ </div>`;}
+window.setYM=(field,part,val)=>{const cur=view[field]||todayKey().slice(0,7);let [y,m]=cur.split('-');
+ if(part==='m')m=val;else y=val;view[field]=y+'-'+m;view.dSel=null;render();};
+window.setDMY=(part,val)=>{const cur=view.date||todayKey();let [y,m,d]=cur.split('-');
+ if(part==='d')d=pad2(val);if(part==='m')m=val;if(part==='y')y=val;
+ const nd=new Date(Number(y),Number(m),0).getDate();if(Number(d)>nd)d=pad2(nd);
+ view.date=y+'-'+m+'-'+d;render();};
 
 /* ================= FIRESTORE ================= */
 function roomRef(code){return doc(db,'rooms',code);}
@@ -255,21 +268,27 @@ function perfil(){
  const selDate=view.date||todayKey();
  const selMonth=view.month||todayKey().slice(0,7);
  const selYear=view.year||todayKey().slice(0,4);
+ const years=yearsFrom(days);
  let body='';
  if(tab==='dia'){
   const e=entries[selDate];const p=entryPts(e);
-  body=`<input type="date" value="${selDate}" onchange="view.date=this.value;render()">`;
+  const [sy,sm,sd]=selDate.split('-');
+  const ndInM=new Date(Number(sy),Number(sm),0).getDate();
+  body=`<div class="two">
+   <select onchange="setDMY('d',this.value)">${Array.from({length:ndInM},(_,i)=>`<option value="${i+1}" ${pad2(i+1)===sd?'selected':''}>${i+1}</option>`).join('')}</select>
+   <select onchange="setDMY('m',this.value)">${MESOS.map((n,i)=>`<option value="${pad2(i+1)}" ${pad2(i+1)===sm?'selected':''}>${n.slice(0,3)}</option>`).join('')}</select>
+   <select onchange="setDMY('y',this.value)">${years.map(yy=>`<option ${yy===sy?'selected':''}>${yy}</option>`).join('')}</select>
+  </div>`;
   if(!e||p.total===0){body+=`<div class="empty">Cap beguda apuntada aquest dia.</div>`;}
   else{body+=DRINKS.filter(d=>e[d.id]).map(d=>`<div class="kv"><span>${d.label}</span><span class="v">×${e[d.id]}</span></div>`).join('');
    body+=`<div class="kv"><span><b>Total punts</b></span><span class="v">${p.total}</span></div>`;}
  }else if(tab==='mes'){
   let t={xupito:0,cubata:0,cervesa:0,total:0};
   for(const k in entries){if(k.startsWith(selMonth)){const p=entryPts(entries[k]);for(const c in t)t[c]+=p[c];}}
-  body=`<input type="month" value="${selMonth}" onchange="view.month=this.value;render()">`
+  body=ymPicker('month',selMonth,years)
    +CATS.map(c=>`<div class="kv"><span>${c.ic} ${c.label}</span><span class="v">${t[c.id]}</span></div>`).join('')
    +`<div class="kv"><span><b>Total mes</b></span><span class="v">${t.total}</span></div>`;
  }else{
-  const years=[...new Set(days.map(d=>d.slice(0,4)).concat([todayKey().slice(0,4)]))].sort();
   let rows='',tot=0;
   for(let m=1;m<=12;m++){const mk=selYear+'-'+String(m).padStart(2,'0');let s=0;
    for(const k in entries){if(k.startsWith(mk))s+=entryPts(entries[k]).total;}
@@ -385,6 +404,8 @@ function sala(){
  const selDCat=view.dCat||'cervesa';
  const selWho=(view.dWho!==undefined)?Number(view.dWho):members.findIndex(m=>m.id===my.memberId);
  const whoM=members[selWho]||me;
+ const allKeys=[];for(const m of members){for(const k in (m.entries||{}))allKeys.push(k);}
+ const roomYears=yearsFrom(allKeys);
 
  const cats=CATS.map(c=>{
   const rows=DRINKS.filter(d=>d.cat===c.id).map(d=>`
@@ -449,18 +470,16 @@ function sala(){
 
  <div class="card">
   <h3>Borratxo del mes</h3>
-  <input type="month" value="${selTop}" onchange="view.topMonth=this.value;render()">
+  ${ymPicker('topMonth',selTop,roomYears)}
   <div class="podium">${pods}</div>
  </div>
 
  <div class="card">
   <h3>Distribució</h3>
-  <div class="two">
-   <input type="month" value="${selDMonth}" onchange="view.dMonth=this.value;view.dSel=null;render()">
-   <select onchange="view.dCat=this.value;view.dSel=null;render()">
-    ${CATS.map(c=>`<option value="${c.id}" ${c.id===selDCat?'selected':''}>${c.ic} ${c.label}</option>`).join('')}
-   </select>
-  </div>
+  ${ymPicker('dMonth',selDMonth,roomYears)}
+  <select onchange="view.dCat=this.value;view.dSel=null;render()">
+   ${CATS.map(c=>`<option value="${c.id}" ${c.id===selDCat?'selected':''}>${c.ic} ${c.label}</option>`).join('')}
+  </select>
   <select onchange="view.dWho=this.value;view.dSel=null;render()">
    ${members.map((m,i)=>`<option value="${i}" ${i===selWho?'selected':''}>👤 ${m.name}${m.id===my.memberId?' (tu)':''}</option>`).join('')}
   </select>
