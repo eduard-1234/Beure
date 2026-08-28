@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#171009">
 <title>Contador de Cerveses</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -91,6 +94,7 @@ input[type=date],input[type=month],input[type=text],select{width:100%;padding:12
 .bars-labels span{flex:1;text-align:center;font-size:8px;color:var(--muted)}
 .subh{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:16px 0 4px}
 .note{font-size:13px;color:var(--muted);line-height:1.45;margin-top:8px}
+.kick{background:none;border:1px solid var(--danger);color:var(--danger);border-radius:10px;padding:5px 10px;font-size:12px;cursor:pointer}
 .err{font-size:13px;color:var(--danger);line-height:1.45;margin:0 0 12px}
 .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px;line-height:1.5}
 .splash{position:fixed;inset:0;margin:0 auto;max-width:480px;background:var(--bg);display:flex;flex-direction:column;justify-content:space-between;padding:80px 24px 24px;overflow:hidden;z-index:10}
@@ -106,7 +110,7 @@ input[type=date],input[type=month],input[type=text],select{width:100%;padding:12
 <div id="app"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { initializeFirestore, persistentLocalCache, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyABgzFvrg2QXVCa-W1Ga8ZQrD0RydgTIKE",
@@ -190,7 +194,8 @@ function myEntry(code){const r=S.myRooms.find(x=>x.code===code);return r;}
 function openLive(code){
  if(live.code===code&&live.unsub)return;
  if(live.unsub)live.unsub();
- live={code,unsub:null,members:null};
+ live={code,unsub:null,members:null,info:null};
+ getDoc(roomRef(code)).then(s=>{if(s.exists()){live.info=s.data();if(view.s==='sala'&&view.code===code)render();}}).catch(e=>console.error(e));
  live.unsub=onSnapshot(membersCol(code),snap=>{
   live.members=snap.docs.map(d=>({id:d.id,...d.data()}));
   if(view.s==='sala'&&view.code===code)render();
@@ -343,8 +348,8 @@ async function doCrear(){
   let code=newCode();
   const exists=await getDoc(roomRef(code));
   if(exists.exists())code=newCode();
-  await setDoc(roomRef(code),{name:v,createdAt:serverTimestamp()});
   const m=await addDoc(membersCol(code),{name:n,entries:{},joinedAt:serverTimestamp()});
+  await setDoc(roomRef(code),{name:v,createdAt:serverTimestamp(),adminId:m.id});
   S.myRooms.push({code,memberId:m.id,myName:n,roomName:v});save();
   view.created=code;render();
  }catch(e){console.error(e);view.err='No s\'ha pogut crear la sala. Revisa la connexió i torna-ho a provar.';render();}
@@ -396,9 +401,12 @@ function sala(){
  const my=myEntry(view.code);if(!my)return sales();
  if(live.members===null){return bar(my.roomName,'sales')+`<div class="empty">Carregant la sala…</div>`;}
  const members=live.members;
- const me=members.find(m=>m.id===my.memberId)||{name:my.myName,entries:{}};
+ const meReal=members.find(m=>m.id===my.memberId);
+ if(!meReal&&members.length>0){return bar(my.roomName,'sales')+`<div class="empty">Ja no ets en aquesta sala — t'han expulsat o s'ha esborrat el teu perfil.<br><br><button class="btn ghost" onclick="leaveLocal('${my.code}')">Treure-la de la meva llista</button></div>`;}
+ const me=meReal||{name:my.myName,entries:{}};
  const tk=todayKey();
- const myToday=(me.entries||{})[tk]||{};
+ const logDay=view.logDay||tk;
+ const myToday=(me.entries||{})[logDay]||{};
  const selTop=view.topMonth||tk.slice(0,7);
  const selDMonth=view.dMonth||tk.slice(0,7);
  const selDCat=view.dCat||'cervesa';
@@ -420,28 +428,29 @@ function sala(){
   const p=entryPts(myToday)[c.id];
   return `<div class="cat ${view['open_'+c.id]?'open':''}">
    <div class="cat-head" onclick="view.open_${c.id}=!view.open_${c.id};render()">
-    <span>${c.ic} ${c.label}</span><span class="pts">${p} punts avui</span></div>
+    <span>${c.ic} ${c.label}</span><span class="pts">${p} punts</span></div>
    <div class="cat-body">${rows}</div></div>`;}).join('');
 
  const avuiList=members.map(m=>{const e=(m.entries||{})[tk]||{};const p=entryPts(e).total;
   const det=DRINKS.filter(d=>e[d.id]).map(d=>`${e[d.id]} ${d.label.toLowerCase()}`).join(' · ')||'res encara';
   return `<div class="member"><div><div class="mn">${m.name}${m.id===my.memberId?' (tu)':''}</div><div class="today">${det}</div></div><div class="streak" style="background:none">${p} pts</div></div>`;}).join('');
 
+ const isAdmin=live.info&&live.info.adminId===my.memberId;
  const membres=[...members].sort((a,b)=>curStreak(b.entries)-curStreak(a.entries))
   .map(m=>{const st=curStreak(m.entries);
+  const kick=(isAdmin&&m.id!==my.memberId)?`<button class="kick" onclick="expulsa('${m.id}')">Expulsar</button>`:'';
   return `<div class="member">
    <div class="mn">${m.name}${m.id===my.memberId?' (tu)':''}</div>
-   <div class="streak">🍺 ${st} ${st===1?'dia':'dies'}</div></div>`;}).join('');
+   <div style="display:flex;align-items:center;gap:8px">${kick}<div class="streak">🍺 ${st} ${st===1?'dia':'dies'}</div></div></div>`;}).join('');
 
- function topOf(cat){let best=null,bp=0;
-  for(const m of members){let s=0;const e=m.entries||{};
-   for(const k in e){if(k.startsWith(selTop))s+=entryPts(e[k])[cat];}
-   if(s>bp){bp=s;best=m.name;}}
-  return best?{name:best,p:bp}:null;}
- const pods=CATS.map(c=>{const t=topOf(c.id);
-  return t?`<div class="pod"><span class="medal">${c.ic}</span>
-   <div class="who"><b>${t.name}</b><span>rei del ${c.label.toLowerCase()}</span></div>
-   <div class="p">${t.p}</div></div>`:'';}).join('')||`<div class="empty">Res apuntat aquest mes.</div>`;
+ const rank=members.map(m=>{const e=m.entries||{};let c=0,x=0,b=0;
+   for(const k in e){if(k.startsWith(selTop)){const p=entryPts(e[k]);c+=p.cervesa;x+=p.xupito;b+=p.cubata;}}
+   return {name:m.name,c,x,b,w:Math.round((c+1.5*x+2*b)*10)/10};})
+  .filter(r=>r.w>0).sort((a,b)=>b.w-a.w);
+ const ordi=['','2n','3r','4t'];
+ const pods=rank.map((r,i)=>`<div class="pod"><span class="medal">${i===0?'👑':(ordi[i]||(i+1)+'è')}</span>
+   <div class="who"><b>${r.name}</b><span>🍺 ${r.c} · 🥃 ${r.x} · 🍹 ${r.b}</span></div>
+   <div class="p">${r.w}</div></div>`).join('')||`<div class="empty">Res apuntat aquest mes.</div>`;
 
  const [dy,dm]=selDMonth.split('-').map(Number);
  const ndays=new Date(dy,dm,0).getDate();
@@ -456,7 +465,10 @@ function sala(){
  <div class="note" style="margin-bottom:12px">Codi de la sala: <b style="color:var(--amber)">${my.code}</b> · Nit del ${fmtKey(tk)}</div>
 
  <div class="card">
-  <h3>Quant he begut avui</h3>
+  <h3>Quant he begut</h3>
+  <select onchange="view.logDay=this.value;render()">
+   ${Array.from({length:7},(_,i)=>{const k=addDays(tk,-i);const lab=i===0?'Avui — nit del '+fmtKey(k):(i===1?'Ahir — '+fmtKey(k):fmtKey(k));return `<option value="${k}" ${k===logDay?'selected':''}>${lab}</option>`;}).join('')}
+  </select>
   ${cats}
   <div class="subh">El grup avui</div>
   ${avuiList}
@@ -472,6 +484,7 @@ function sala(){
   <h3>Borratxo del mes</h3>
   ${ymPicker('topMonth',selTop,roomYears)}
   <div class="podium">${pods}</div>
+  <div class="note">Puntuació: punts de cervesa ×1 + punts de xupito ×1,5 + punts de cubata ×2. A sota de cada nom, el desglossament per categoria.</div>
  </div>
 
  <div class="card">
@@ -492,7 +505,7 @@ function sala(){
 function step(drinkId,delta){
  const my=myEntry(view.code);if(!my||live.members===null)return;
  const me=live.members.find(m=>m.id===my.memberId);if(!me)return;
- const tk=todayKey();
+ const tk=view.logDay||todayKey();
  me.entries=me.entries||{};
  me.entries[tk]=me.entries[tk]||{};
  me.entries[tk][drinkId]=Math.max(0,(me.entries[tk][drinkId]||0)+delta);
@@ -502,6 +515,19 @@ function step(drinkId,delta){
   .catch(e=>console.error(e)); /* offline: la SDK ho encua i ho envia quan torni la connexió */
 }
 window.step=step;
+
+window.expulsa=async(id)=>{
+ const m=(live.members||[]).find(x=>x.id===id);
+ if(!confirm('Segur que vols expulsar '+(m?m.name:'aquest membre')+'? S\'esborraran les seves dades d\'aquesta sala.'))return;
+ try{await deleteDoc(doc(db,'rooms',view.code,'members',id));}
+ catch(e){console.error(e);alert('No s\'ha pogut expulsar. Revisa la connexió i que les regles estiguin actualitzades.');}
+};
+
+window.leaveLocal=(code)=>{
+ S.myRooms=S.myRooms.filter(r=>r.code!==code);save();
+ if(live.unsub)live.unsub();live={code:null,unsub:null,members:null,info:null};
+ go('sales');
+};
 
 render();
 </script>
