@@ -134,8 +134,10 @@ const DRINKS=[
  {id:'canya', cat:'cervesa', label:'Canya',            sub:'',               pts:1},
  {id:'quinto',cat:'cervesa', label:'Quinto',           sub:'',               pts:0.5},
  {id:'clara', cat:'cervesa', label:'Clara',            sub:'',               pts:0.5},
+ {id:'copavi',cat:'vi',      label:'Copa completa',    sub:'',               pts:1},
+ {id:'mitjacopa',cat:'vi',   label:'Mitja copa',       sub:'',               pts:0.5},
 ];
-const CATS=[{id:'xupito',label:'Xupito',ic:'🥃'},{id:'cubata',label:'Cubata',ic:'🍹'},{id:'cervesa',label:'Cervesa',ic:'🍺'}];
+const CATS=[{id:'xupito',label:'Xupito',ic:'🥃'},{id:'cubata',label:'Cubata',ic:'🍹'},{id:'cervesa',label:'Cervesa',ic:'🍺'},{id:'vi',label:'Copa de vi',ic:'🍷'}];
 const MESOS=['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 
 /* ================= ESTAT LOCAL ================= */
@@ -157,9 +159,9 @@ function todayKey(){return keyOf(effDate());}
 function addDays(k,n){const [y,m,d]=k.split('-').map(Number);const dt=new Date(y,m-1,d+n);return keyOf(dt);}
 function fmtKey(k){const [y,m,d]=k.split('-');return d+'/'+m+'/'+y;}
 
-function entryPts(e){let r={xupito:0,cubata:0,cervesa:0,total:0};if(!e)return r;
+function entryPts(e){let r={xupito:0,cubata:0,cervesa:0,vi:0,total:0};if(!e)return r;
  for(const dr of DRINKS){const n=e[dr.id]||0;r[dr.cat]+=n*dr.pts;}
- r.total=r.xupito+r.cubata+r.cervesa;return r;}
+ r.total=r.xupito+r.cubata+r.cervesa+r.vi;return r;}
 function drinkDays(entries){return Object.keys(entries||{}).filter(k=>entryPts(entries[k]).total>0).sort();}
 function maxStreak(days){if(!days.length)return 0;let best=1,cur=1;
  for(let i=1;i<days.length;i++){cur=(addDays(days[i-1],1)===days[i])?cur+1:1;best=Math.max(best,cur);}return best;}
@@ -288,7 +290,7 @@ function perfil(){
   else{body+=DRINKS.filter(d=>e[d.id]).map(d=>`<div class="kv"><span>${d.label}</span><span class="v">×${e[d.id]}</span></div>`).join('');
    body+=`<div class="kv"><span><b>Total punts</b></span><span class="v">${p.total}</span></div>`;}
  }else if(tab==='mes'){
-  let t={xupito:0,cubata:0,cervesa:0,total:0};
+  let t={xupito:0,cubata:0,cervesa:0,vi:0,total:0};
   for(const k in entries){if(k.startsWith(selMonth)){const p=entryPts(entries[k]);for(const c in t)t[c]+=p[c];}}
   body=ymPicker('month',selMonth,years)
    +CATS.map(c=>`<div class="kv"><span>${c.ic} ${c.label}</span><span class="v">${t[c.id]}</span></div>`).join('')
@@ -443,13 +445,13 @@ function sala(){
    <div class="mn">${m.name}${m.id===my.memberId?' (tu)':''}</div>
    <div style="display:flex;align-items:center;gap:8px">${kick}<div class="streak">🍺 ${st} ${st===1?'dia':'dies'}</div></div></div>`;}).join('');
 
- const rank=members.map(m=>{const e=m.entries||{};let c=0,x=0,b=0;
-   for(const k in e){if(k.startsWith(selTop)){const p=entryPts(e[k]);c+=p.cervesa;x+=p.xupito;b+=p.cubata;}}
-   return {name:m.name,c,x,b,w:Math.round((c+1.5*x+2*b)*10)/10};})
+ const rank=members.map(m=>{const e=m.entries||{};let c=0,x=0,b=0,v=0;
+   for(const k in e){if(k.startsWith(selTop)){const p=entryPts(e[k]);c+=p.cervesa;x+=p.xupito;b+=p.cubata;v+=p.vi;}}
+   return {name:m.name,c,x,b,v,w:Math.round((c+v+1.5*x+2*b)*10)/10};})
   .filter(r=>r.w>0).sort((a,b)=>b.w-a.w);
  const ordi=['','2n','3r','4t'];
  const pods=rank.map((r,i)=>`<div class="pod"><span class="medal">${i===0?'👑':(ordi[i]||(i+1)+'è')}</span>
-   <div class="who"><b>${r.name}</b><span>🍺 ${r.c} · 🥃 ${r.x} · 🍹 ${r.b}</span></div>
+   <div class="who"><b>${r.name}</b><span>🍺 ${r.c} · 🍷 ${r.v} · 🥃 ${r.x} · 🍹 ${r.b}</span></div>
    <div class="p">${r.w}</div></div>`).join('')||`<div class="empty">Res apuntat aquest mes.</div>`;
 
  const [dy,dm]=selDMonth.split('-').map(Number);
@@ -484,7 +486,7 @@ function sala(){
   <h3>Borratxo del mes</h3>
   ${ymPicker('topMonth',selTop,roomYears)}
   <div class="podium">${pods}</div>
-  <div class="note">Puntuació: punts de cervesa ×1 + punts de xupito ×1,5 + punts de cubata ×2. A sota de cada nom, el desglossament per categoria.</div>
+  <div class="note">Puntuació: punts de cervesa i vi ×1 + punts de xupito ×1,5 + punts de cubata ×2. A sota de cada nom, el desglossament per categoria.</div>
  </div>
 
  <div class="card">
